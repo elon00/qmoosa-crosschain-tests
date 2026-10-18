@@ -1,0 +1,85 @@
+name: Full-Spectrum Cross-Chain Reality Gates & Invariant CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  reality-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tests repository
+        uses: actions/checkout@v4
+        with:
+          path: qmoosa-crosschain-tests
+
+      - name: Checkout protocol repository (Pinned Commit)
+        uses: actions/checkout@v4
+        with:
+          repository: elon00/qmoosa-crosschain-protocol
+          ref: e2ee138d08049222b487eca8fe98206290619698
+          path: qmoosa-crosschain-protocol
+
+      - name: Checkout engine repository (Pinned Commit)
+        uses: actions/checkout@v4
+        with:
+          repository: elon00/qmoosa-crosschain-engine
+          ref: 10568e75b1c39f46761b2039e15b3a1f8cc0d9b0
+          path: qmoosa-crosschain-engine
+
+      - name: Checkout sdk repository (Pinned Commit)
+        uses: actions/checkout@v4
+        with:
+          repository: elon00/qmoosa-crosschain-sdk
+          ref: 3790dfb0685ffc8afab1269b92c33419601b51aa
+          path: qmoosa-crosschain-sdk
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: qmoosa-crosschain-tests/package.json
+
+      - name: Install dependencies in sibling repositories
+        run: |
+          npm ci --prefix qmoosa-crosschain-protocol
+          npm ci --prefix qmoosa-crosschain-engine
+          npm ci --prefix qmoosa-crosschain-sdk
+
+      - name: Install dependencies in tests repository
+        working-directory: qmoosa-crosschain-tests
+        run: |
+          npm install
+          mkdir -p node_modules/@qmoosa/crosschain-protocol
+          mkdir -p node_modules/@qmoosa/crosschain-engine
+          mkdir -p node_modules/@qmoosa/crosschain-sdk
+          tar -xzf packages/qmoosa-crosschain-protocol-1.0.0.tgz -C node_modules/@qmoosa/crosschain-protocol --strip-components=1
+          tar -xzf packages/qmoosa-crosschain-engine-1.0.0.tgz -C node_modules/@qmoosa/crosschain-engine --strip-components=1
+          tar -xzf packages/qmoosa-crosschain-sdk-1.0.0.tgz -C node_modules/@qmoosa/crosschain-sdk --strip-components=1
+
+      - name: Run Source & Package Integrity Gate (Archive Mode)
+        working-directory: qmoosa-crosschain-tests
+        run: npm run verify:archive
+
+      - name: Run Strict Current-HEAD Alignment Gate
+        working-directory: qmoosa-crosschain-tests
+        run: npm run verify:current-head
+
+      - name: Run Hermetic Source Derivation & Canonical Artifact Comparison Gate
+        working-directory: qmoosa-crosschain-tests
+        run: npm run verify:source
+
+      - name: Run Integration Tests
+        working-directory: qmoosa-crosschain-tests
+        run: npm run test:integration
+
+      - name: Run Adversarial Negative Control Suite
+        working-directory: qmoosa-crosschain-tests
+        run: npm run test:negative
+
+      - name: Static Lint Check
+        working-directory: qmoosa-crosschain-tests
+        run: npm run lint
