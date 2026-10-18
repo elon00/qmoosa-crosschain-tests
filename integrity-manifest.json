@@ -1,30 +1,30 @@
 {
   "mission": "QMOOSA-CROSSCHAIN-01",
-  "generatedAt": "2026-10-18T20:00:00Z",
+  "generatedAt": "2026-10-18T23:30:00Z",
   "packages": [
     {
       "name": "@qmoosa/crosschain-protocol",
       "version": "1.0.0",
       "repository": "elon00/qmoosa-crosschain-protocol",
-      "sourceCommit": "e2ee138d08049222b487eca8fe98206290619698",
+      "sourceCommit": "7d34032d113f21cb013326e8c98a7a57d7ea0402",
       "archivePath": "packages/qmoosa-crosschain-protocol-1.0.0.tgz",
-      "sha256": "64538d6a3d85d2928019e848d33b58f454406822e0fdc88dd88a5509d9f6e677"
+      "sha256": "50e07ab59c81c83df3a22d0bd32e888db8bb06d2034a4b8ba81f71d3dcc745f9"
     },
     {
       "name": "@qmoosa/crosschain-engine",
       "version": "1.0.0",
       "repository": "elon00/qmoosa-crosschain-engine",
-      "sourceCommit": "10568e75b1c39f46761b2039e15b3a1f8cc0d9b0",
+      "sourceCommit": "70241949dfffb8d0470877a37832343f32b7c6e2",
       "archivePath": "packages/qmoosa-crosschain-engine-1.0.0.tgz",
-      "sha256": "4092c3e8a0ab706c6d0712bcad98633827919b722a56c115fe77d3fc5e586124"
+      "sha256": "7980871c502fada5aa77959cd905e5168914031c88aa589a8496bb342f3a6f5e"
     },
     {
       "name": "@qmoosa/crosschain-sdk",
       "version": "1.0.0",
       "repository": "elon00/qmoosa-crosschain-sdk",
-      "sourceCommit": "3790dfb0685ffc8afab1269b92c33419601b51aa",
+      "sourceCommit": "398d21cd11d00e15356d1e4eb5726b86c0df7d5f",
       "archivePath": "packages/qmoosa-crosschain-sdk-1.0.0.tgz",
-      "sha256": "61879dd6290cf0b8b63c21234c5fa46b0a6a621f8cc8607c0248676f3f9323d2"
+      "sha256": "5dc39187394c725474c452497213e498ce4ec9a86cd2368ac3ab7ba77e71d290"
     }
   ]
 }

@@ -19,21 +19,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: elon00/qmoosa-crosschain-protocol
-          ref: e2ee138d08049222b487eca8fe98206290619698
+          ref: 7d34032d113f21cb013326e8c98a7a57d7ea0402
           path: qmoosa-crosschain-protocol
 
       - name: Checkout engine repository (Pinned Commit)
         uses: actions/checkout@v4
         with:
           repository: elon00/qmoosa-crosschain-engine
-          ref: 10568e75b1c39f46761b2039e15b3a1f8cc0d9b0
+          ref: 70241949dfffb8d0470877a37832343f32b7c6e2
           path: qmoosa-crosschain-engine
 
       - name: Checkout sdk repository (Pinned Commit)
         uses: actions/checkout@v4
         with:
           repository: elon00/qmoosa-crosschain-sdk
-          ref: 3790dfb0685ffc8afab1269b92c33419601b51aa
+          ref: 398d21cd11d00e15356d1e4eb5726b86c0df7d5f
           path: qmoosa-crosschain-sdk
 
       - name: Setup Node.js

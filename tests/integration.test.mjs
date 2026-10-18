@@ -95,8 +95,8 @@ test("Integration 4: End-to-end multi-repo dual-chain atomic swap and mutual cla
   // 1. Alice generates secret & hashlock using SDK
   const { secret, hashlock } = client.createSecretCommitment();
 
-  const sourceTimelock = 10600;
-  const destTimelock = 10200; // 400s delta >= 300s required buffer
+  const sourceTimelock = 12000;
+  const destTimelock = 10500; // 1500s delta >= 684s dynamic chain-pair margin
 
   const swapId = computeSwapId({
     sender: alice,

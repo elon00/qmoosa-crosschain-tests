@@ -37,8 +37,8 @@ test("Negative Control 1: Invalid secret preimage fails hashlock verification", 
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 1
@@ -71,16 +71,16 @@ test("Negative Control 2: Premature refund before timelock expiry is rejected", 
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 2
   });
 
-  // Attempt refund when currentTimestamp (9500) <= sourceTimelock (10600)
+  // Attempt refund when currentTimestamp (11000) <= sourceTimelock (12000)
   assert.throws(
-    () => engine.executeRefund(swapId, 9500),
+    () => engine.executeRefund(swapId, 11000),
     /TIMELOCK_ACTIVE/
   );
 });
@@ -102,8 +102,8 @@ test("Negative Control 3: Post-claim refund attack fails (Mutual Exclusion)", ()
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 3
@@ -113,9 +113,9 @@ test("Negative Control 3: Post-claim refund attack fails (Mutual Exclusion)", ()
   engine.recordCounterpartyFunding(swapId, 32);
   engine.revealSecretAndClaim(swapId, secret, 9500);
 
-  // Even at t=12000 > 10600, refund MUST fail
+  // Even at t=13000 > 12000, refund MUST fail
   assert.throws(
-    () => engine.executeRefund(swapId, 12000),
+    () => engine.executeRefund(swapId, 13000),
     /MUTUAL_EXCLUSION_VIOLATION/
   );
 });
@@ -137,20 +137,20 @@ test("Negative Control 4: Post-refund claim attack fails (Mutual Exclusion)", ()
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 4
   });
 
-  // Legitimate refund past source timelock at t=11000
-  engine.executeRefund(swapId, 11000);
+  // Legitimate refund past source timelock at t=12500
+  engine.executeRefund(swapId, 12500);
   assert.equal(engine.getSwap(swapId)?.state, CrossChainSwapState.REFUNDED);
 
   // Recipient attempts to claim afterwards
   assert.throws(
-    () => engine.revealSecretAndClaim(swapId, secret, 11050),
+    () => engine.revealSecretAndClaim(swapId, secret, 12600),
     /INVALID_STATE_TRANSITION/
   );
 });
@@ -221,8 +221,8 @@ test("Negative Control 7: Deep chain reorg demotes confirmation depth back to un
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 7
@@ -247,7 +247,7 @@ test("Negative Control 8: Insufficient timelock safety delta is rejected by Engi
   const { hashlock } = client.createSecretCommitment();
   const swapId = "0x" + "88".repeat(32);
 
-  // Delta is only 100s < 300s
+  // Delta is only 100s < 684s dynamic chain-pair requirement
   assert.throws(
     () => engine.createSwapOrder({
       swapId,
@@ -300,8 +300,8 @@ test("Negative Control 9: Claim after destination timelock has elapsed is reject
     sourceAmount: 100n * ONE_ETHER,
     destAmount: 100n * ONE_ETHER,
     hashlock,
-    sourceTimelock: 10600,
-    destTimelock: 10200,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
     sourceChainId: 1,
     destChainId: 137,
     nonce: 9
@@ -310,9 +310,65 @@ test("Negative Control 9: Claim after destination timelock has elapsed is reject
   engine.recordSourceFunding(swapId, 12);
   engine.recordCounterpartyFunding(swapId, 32);
 
-  // Attempt claim at t=10201 > 10200
+  // Attempt claim at t=10501 > 10500
   assert.throws(
-    () => engine.revealSecretAndClaim(swapId, secret, 10201),
+    () => engine.revealSecretAndClaim(swapId, secret, 10501),
     /SWAP_TIMELOCK_EXPIRED/
   );
+});
+
+test("Negative Control 10: Reverted receipt status rejects block event processing", () => {
+  const { publicKey: adminPub } = AdminAuthManager.generateKeyPair();
+  const engine = new CrossChainEngine(adminPub, 1);
+
+  const revertedEvent = {
+    eventId: "evt_failed_tx",
+    chainId: 1,
+    blockNumber: 105,
+    blockHash: "0x" + "e".repeat(64),
+    txHash: "0x" + "f".repeat(64),
+    status: 0, // Reverted receipt
+    swapId: "0xNonExistent",
+    eventType: "SWAP_CREATED",
+    data: {}
+  };
+
+  assert.throws(
+    () => engine.processBlockEvent(revertedEvent),
+    /TRANSACTION_FAILED/
+  );
+});
+
+test("Negative Control 11: Defensive snapshot mutation cannot corrupt engine state", () => {
+  const { publicKey: adminPub } = AdminAuthManager.generateKeyPair();
+  const engine = new CrossChainEngine(adminPub, 1);
+  const client = new CrossChainClient(12, 32);
+
+  const { hashlock } = client.createSecretCommitment();
+  const swapId = "0x" + "aa".repeat(32);
+
+  engine.createSwapOrder({
+    swapId,
+    sender: "0xAlice",
+    recipient: "0xBob",
+    sourceToken: "0xTokenA",
+    destToken: "0xTokenB",
+    sourceAmount: 100n * ONE_ETHER,
+    destAmount: 100n * ONE_ETHER,
+    hashlock,
+    sourceTimelock: 12000,
+    destTimelock: 10500,
+    sourceChainId: 1,
+    destChainId: 137,
+    nonce: 11
+  });
+
+  const snapshot = engine.getSwap(swapId);
+  assert.ok(snapshot);
+
+  try {
+    snapshot.state = CrossChainSwapState.CLAIMED;
+  } catch {}
+
+  assert.equal(engine.getSwap(swapId)?.state, CrossChainSwapState.CREATED);
 });
