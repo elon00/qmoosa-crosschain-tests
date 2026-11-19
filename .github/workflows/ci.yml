@@ -11,26 +11,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tests repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: qmoosa-crosschain-tests
 
       - name: Checkout protocol repository (Pinned Commit)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: elon00/qmoosa-crosschain-protocol
           ref: 7d34032d113f21cb013326e8c98a7a57d7ea0402
           path: qmoosa-crosschain-protocol
 
       - name: Checkout engine repository (Pinned Commit)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: elon00/qmoosa-crosschain-engine
           ref: 70241949dfffb8d0470877a37832343f32b7c6e2
           path: qmoosa-crosschain-engine
 
       - name: Checkout sdk repository (Pinned Commit)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: elon00/qmoosa-crosschain-sdk
           ref: 398d21cd11d00e15356d1e4eb5726b86c0df7d5f
